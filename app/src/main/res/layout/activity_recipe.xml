@@ -60,6 +60,7 @@
         </android.support.constraint.ConstraintLayout>
 
         <ScrollView
+            android:id="@+id/sv_recipe_activity"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

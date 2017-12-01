@@ -143,17 +143,9 @@ public class RecipeActivity extends AppCompatActivity implements StepsListAdapte
     public void onClick(int position) {
         if(isTablet)
         {
-            if(mFragment!=null)
-                getSupportFragmentManager().beginTransaction().remove(mFragment).commit();
-
-            mFragment =new StepDetailsFragment();
             mFragment.setmDescription(mRecipe.getmSteps()[position].getmDescription());
             mFragment.setmImageUrl(mRecipe.getmSteps()[position].getmThumbnailURL());
             mFragment.setmVideoUrl(mRecipe.getmSteps()[position].getmVideoURL());
-            FragmentManager manager = getSupportFragmentManager();
-            manager.beginTransaction()
-                    .add(R.id.fl_step_details_container,mFragment)
-                    .commit();
         }
         else {
             Intent intent = new Intent(this,StepActivity.class);

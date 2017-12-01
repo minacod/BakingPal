@@ -13,8 +13,11 @@ import java.util.Scanner;
  * Created by shafy on 22/11/2017.
  */
 
-public class NetworkUtils {
+public final class NetworkUtils {
 
+
+    private NetworkUtils() {
+    }
 
     private static String mUrl = "https://d17h27t6h515a5.cloudfront.net/topher/2017/May/59121517_baking/baking.json";
 

@@ -21,10 +21,6 @@ public class IngredientWidget extends AppWidgetProvider {
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId,String c) {
 
-        //CharSequence widgetText = context.getString(R.string.appwidget_text);
-        // Construct the RemoteViews object
-        //RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.ingredient_widget);
-        //views.setTextViewText(R.id.appwidget_text, c);
         RemoteViews views = getIngredientListRemoteView(context,c);
 
         // Instruct the widget manager to update the widget

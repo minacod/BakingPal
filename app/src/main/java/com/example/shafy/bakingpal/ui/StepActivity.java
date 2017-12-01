@@ -26,6 +26,7 @@ public class StepActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         setContentView(R.layout.activity_step);
         Intent openedThis = getIntent();
 
@@ -34,6 +35,9 @@ public class StepActivity extends AppCompatActivity {
         int length = openedThis.getIntExtra("length",0);
         mSteps= steps.toArray(new Step[length]);
         mIndex = openedThis.getIntExtra("position",0);
+
+        if(savedInstanceState!=null)
+            mIndex=savedInstanceState.getInt("index");
 
         if(getSupportActionBar()!=null)
             getSupportActionBar().setTitle(mSteps[mIndex].getmShortDescription());
@@ -47,7 +51,12 @@ public class StepActivity extends AppCompatActivity {
             mBinding.btnNext.setEnabled(false);
         }
 
-        updateFragment();
+
+        if(mFragment==null)
+            makeFragment();
+        else
+            updateFragment();
+
         mBinding.btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -62,7 +71,20 @@ public class StepActivity extends AppCompatActivity {
         });
     }
 
-    private void updateFragment(){
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("index",mIndex);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateFragment();
+    }
+
+    private void makeFragment(){
         if(mFragment!=null)
             getSupportFragmentManager().beginTransaction().remove(mFragment).commit();
         mFragment =new StepDetailsFragment();
@@ -73,6 +95,14 @@ public class StepActivity extends AppCompatActivity {
         manager.beginTransaction()
                 .add(R.id.fl_step_details_container,mFragment)
                 .commit();
+    }
+
+
+
+    private void updateFragment() {
+        mFragment.setmDescription(mSteps[mIndex].getmDescription());
+        mFragment.setmImageUrl(mSteps[mIndex].getmThumbnailURL());
+        mFragment.setmVideoUrl(mSteps[mIndex].getmVideoURL());
     }
 
 
@@ -98,8 +128,4 @@ public class StepActivity extends AppCompatActivity {
             updateFragment();
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
 }

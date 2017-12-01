@@ -29,10 +29,13 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.squareup.picasso.Picasso;
@@ -41,15 +44,14 @@ import com.squareup.picasso.Picasso;
  * Created by shafy on 28/11/2017.
  */
 
-public class StepDetailsFragment extends Fragment implements ExoPlayer.EventListener {
+public class StepDetailsFragment extends Fragment  {
 
     private String mVideoUrl;
     private String mImageUrl;
     private String mDescription;
+    private long mPosition;
 
-    private static String VIDEO_URL ="video_url";
-    private static String IMAGE_URL ="image_url";
-    private static String DESCRIPTION ="description";
+    private static String POSITION ="position";
 
     private String TAG = "StepDetailsFragment";
 
@@ -60,11 +62,14 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
 
     private FragmentStepDetailsBinding mBinding;
 
+
     public StepDetailsFragment() {
     }
 
     public void setmVideoUrl(String mVideoUrl) {
         this.mVideoUrl = mVideoUrl;
+        if(mBinding!=null)
+            updateUi();
     }
 
     public void setmImageUrl(String mImageUrl) {
@@ -79,18 +84,26 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+        mPosition=0;
         if(savedInstanceState!=null){
-            mImageUrl = savedInstanceState.getString(IMAGE_URL);
-            mVideoUrl = savedInstanceState.getString(VIDEO_URL);
-            mDescription = savedInstanceState.getString(DESCRIPTION);
+            mPosition=savedInstanceState.getLong(POSITION);
         }
 
         mBinding = FragmentStepDetailsBinding.inflate(inflater,container,false);
 
+        updateUi();
+
+        return mBinding.getRoot();
+    }
+    void updateUi(){
+
         mBinding.tvDescription.setText(mDescription);
         mPlayerView=mBinding.simpleExoPlayerView;
 
+        if (mExoPlayer!=null)
+            releasePlayer();
         if(mVideoUrl!=null&&!mVideoUrl.equals("")){
+            mPlayerView.setVisibility(View.VISIBLE);
             initializeMediaSession();
             initializePlayer(Uri.parse(mVideoUrl));
         }
@@ -101,15 +114,32 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
             mPlayerView.setVisibility(View.INVISIBLE);
             mBinding.ivExoBack.setImageResource(R.drawable.ic_bakingapplogo);
         }
-
-        return mBinding.getRoot();
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putString(IMAGE_URL,mImageUrl);
-        outState.putString(VIDEO_URL,mVideoUrl);
-        outState.putString(DESCRIPTION,mDescription);
+
+        if (mExoPlayer != null) {
+            mPosition = mExoPlayer.getCurrentPeriodIndex();
+        }
+
+        outState.putLong(POSITION,mPosition);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mBinding==null||mExoPlayer==null)
+            updateUi();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        releasePlayer();
+        if(mMediaSession!=null)
+            mMediaSession.setActive(false);
+        mMediaSession=null;
     }
 
     @Override
@@ -118,24 +148,24 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
         releasePlayer();
         if(mMediaSession!=null)
             mMediaSession.setActive(false);
+        mMediaSession=null;
     }
 
     private void initializePlayer(Uri mediaUri) {
-        TrackSelector trackSelector = new DefaultTrackSelector();
+        DefaultTrackSelector trackSelector = new DefaultTrackSelector();
         LoadControl loadControl = new DefaultLoadControl();
         mExoPlayer = ExoPlayerFactory.newSimpleInstance(mBinding.getRoot().getContext(), trackSelector, loadControl);
         mPlayerView.setPlayer(mExoPlayer);
-
-        mExoPlayer.addListener(this);
-
         String userAgent = Util.getUserAgent(mBinding.getRoot().getContext(), "BakingPal");
         MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(
                 mBinding.getRoot().getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
+        if(mPosition!=0)mExoPlayer.seekTo(mPosition);
         mExoPlayer.prepare(mediaSource);
     }
 
     private void releasePlayer() {
         if (mExoPlayer != null) {
+            mPosition = mExoPlayer.getCurrentPosition();
             mExoPlayer.stop();
             mExoPlayer.release();
             mExoPlayer = null;
@@ -159,46 +189,6 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
         mMediaSession.setActive(true);
     }
 
-    @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest) {
-
-    }
-
-    @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-
-    }
-
-    @Override
-    public void onLoadingChanged(boolean isLoading) {
-
-    }
-
-    @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
-        if((playbackState == ExoPlayer.STATE_READY) && playWhenReady){
-            Log.d(TAG, "onPlayerStateChanged: PLAYING");
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,mExoPlayer.getCurrentPosition(),1f);
-            mMediaSession.setPlaybackState(mStateBuilder.build());
-        } else if((playbackState == ExoPlayer.STATE_READY)){
-            Log.d(TAG, "onPlayerStateChanged: PAUSED");
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PAUSED,mExoPlayer.getCurrentPosition(),1f);
-            mMediaSession.setPlaybackState(mStateBuilder.build());
-        }
-
-    }
-
-    @Override
-    public void onPlayerError(ExoPlaybackException error) {
-
-    }
-
-    @Override
-    public void onPositionDiscontinuity() {
-
-    }
-
     class Callbacks extends MediaSessionCompat.Callback{
         @Override
         public void onPlay() {
@@ -219,6 +209,11 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
         public void onSeekTo(long pos) {
             mExoPlayer.seekTo(pos);
         }
+
+        @Override
+        public void onStop() {
+            mExoPlayer.stop();
+        }
     }
     public static class Receiver extends BroadcastReceiver {
         public Receiver(){}
@@ -227,10 +222,4 @@ public class StepDetailsFragment extends Fragment implements ExoPlayer.EventList
             MediaButtonReceiver.handleIntent(mMediaSession,intent);
         }
     }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-    }
-
 }

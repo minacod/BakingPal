@@ -22,13 +22,11 @@
         <activity
             android:name=".ui.RecipeActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".ui.MainActivity"
-            android:configChanges="orientation|screenSize"/>
+            android:parentActivityName=".ui.MainActivity"/>
         <activity
             android:name=".ui.StepActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".ui.RecipeActivity"
-            android:configChanges="orientation|screenSize"/>
+            android:parentActivityName=".ui.RecipeActivity"/>
 
         <receiver android:name=".ui.StepDetailsFragment$Receiver">
             <intent-filter>
