@@ -52,10 +52,7 @@ public class StepActivity extends AppCompatActivity {
         }
 
 
-        if(mFragment==null)
-            makeFragment();
-        else
-            updateFragment();
+        makeFragment();
 
         mBinding.btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,7 +111,7 @@ public class StepActivity extends AppCompatActivity {
         if(getSupportActionBar()!=null)
             getSupportActionBar().setTitle(mSteps[mIndex].getmShortDescription());
         mBinding.btnBack.setEnabled(true);
-        updateFragment();
+        makeFragment();
     }
 
     private void previousStep(){
@@ -125,7 +122,7 @@ public class StepActivity extends AppCompatActivity {
         if(getSupportActionBar()!=null)
             getSupportActionBar().setTitle(mSteps[mIndex].getmShortDescription());
         mBinding.btnNext.setEnabled(true);
-            updateFragment();
+            makeFragment();
     }
 
 }

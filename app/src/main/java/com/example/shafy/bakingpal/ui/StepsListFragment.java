@@ -48,6 +48,7 @@ public class StepsListFragment extends Fragment{
             }
         };
         rv.setHasFixedSize(true);
+        rv.setNestedScrollingEnabled(false);
         rv.setLayoutManager(manager);
         rv.setAdapter(mAdapter);
         return StepsListBinding.getRoot();
